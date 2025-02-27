@@ -84,17 +84,30 @@ def main():
     )
 
     fig.add_trace(
-        px.pie(clean_df_expenses, values="Expenses", names="Description").data[0], row=1, col=1
+        px.pie(
+            clean_df_expenses,
+            values="Expenses",
+            names="Description"
+        ).data[0],
+        row=1,
+        col=1,
     )
 
     fig.add_trace(
-        px.pie(clean_df_income, values="Income", names="Description").data[0], row=1, col=2
-        )
+        px.pie(
+            clean_df_income,
+            values="Income",
+            names="Description"
+        ).data[0],
+        row=1,
+        col=2,
+    )
 
     fig.update_layout(
-        height=800,
         showlegend=True,
         title_text="Financial Dashboard",
+        template="seaborn",
+        paper_bgcolor="lavender",
     )
 
     fig.show()
