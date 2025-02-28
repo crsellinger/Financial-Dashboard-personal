@@ -50,7 +50,6 @@ def main():
 
     # Join income and expenses dataframes
     merged_df = pd.merge(expenses_df, income_df, how="inner", on="Description")
-    # print(merged_df.to_markdown())
 
     #################################
     # Cleaning data
@@ -62,63 +61,47 @@ def main():
     # CATEGORIES
     ###################################################################
 
-    # Changes all descriptions containing the following to Grocery
-    clean_df.loc[
-        clean_df["Description"].str.contains("WM SUPERCENTER")
-        | clean_df["Description"].str.contains("WAL-MART")
-        | clean_df["Description"].str.contains("TARGET")
-        | clean_df["Description"].str.contains("PRICE CHOPPER")
-        | clean_df["Description"].str.contains("DOWNTOWN MARKET")
-        | clean_df["Description"].str.contains("365 MARKET")
-        | clean_df["Description"].str.contains("PINA WINE"),
-        "Description",
-    ] = "Grocery"
+    # Define the categories with their respective patterns
+    category_map = {
+        "Grocery": [
+            "WM SUPERCENTER", "WAL-MART", "TARGET", "PRICE CHOPPER", 
+            "DOWNTOWN MARKET", "365 MARKET", "PINA WINE"
+        ],
+        "Restaurant & Shopping": [
+            "CRACKER BARREL", "NOBLE SOUTH", "ANOTHER BROKEN EGG", "AMAZON", 
+            "GULF ISLAND GRILL", "JOES KANSAS CITY", "STARBUCKS", 
+            "MCDONALD", "A&G RESTAURANT"
+        ],
+        "Gas": [
+            "SUNOCO", "PILOT", "QT", "SHELL OIL", "LOVE'S", "BUC-EE'S", "EXXON"
+        ],
+        "Savings & Retirement": [
+            "Acorns", "ROBINHOOD"
+        ],
+        "Utilities & Parking": [
+            "EVERGY METRO", "MID-CON MANAGEMENT", "ATT"
+        ]
+    }
 
-    # Changes descriptions for restaurant and shopping category
-    clean_df.loc[
-        clean_df["Description"].str.contains("CRACKER BARREL")
-        | clean_df["Description"].str.contains("NOBLE SOUTH")
-        | clean_df["Description"].str.contains("ANOTHER BROKEN EGG")
-        | clean_df["Description"].str.contains("AMAZON")
-        | clean_df["Description"].str.contains("GULF ISLAND GRILL")
-        | clean_df["Description"].str.contains("JOES KANSAS CITY")
-        | clean_df["Description"].str.contains("STARBUCKS")
-        | clean_df["Description"].str.contains("MCDONALD")
-        | clean_df["Description"].str.contains("A&G RESTAURANT"),
-        "Description",
-    ] = "Restaurant & Shopping"
+    # Helper function to categorize based on the category map
+    def categorize_description(description, category_map):
+        for category, patterns in category_map.items():
+            if any(pattern in description for pattern in patterns):
+                return category
+        return description
 
-    # Changes descriptions for Gas category
-    clean_df.loc[
-        clean_df["Description"].str.contains("SUNOCO")
-        | clean_df["Description"].str.contains("PILOT")
-        | clean_df["Description"].str.contains("QT")
-        | clean_df["Description"].str.contains("SHELL OIL")
-        | clean_df["Description"].str.contains("LOVE'S")
-        | clean_df["Description"].str.contains("BUC-EE'S")
-        | clean_df["Description"].str.contains("EXXON"),
-        "Description",
-    ] = "Gas"
+    # Apply the categorization function
+    clean_df["Description"] = clean_df["Description"].apply(
+        lambda x: categorize_description(x, category_map) if x not in ["Grocery", "Restaurant & Shopping", "Gas", "Savings & Retirement", "Utilities & Parking"] else x
+    )
+    print(clean_df.to_markdown())
 
+    # Handle "Other" category for expenses below 50
     clean_df.loc[
-        clean_df["Description"].str.contains("Acorns")
-        | clean_df["Description"].str.contains("ROBINHOOD"),
-        "Description",
-    ] = "Savings & Retirement"
-
-    clean_df.loc[
-        clean_df["Description"].str.contains("EVERGY METRO")
-        | clean_df["Description"].str.contains("MID-CON MANAGEMENT")
-        | clean_df["Description"].str.contains("ATT"),
-        "Description",
-    ] = "Utilities & Parking"
-
-    # Changes all expenses' descriptions below 50 dollars to Other
-    clean_df.loc[
-            (clean_df["Expenses"] < 50)
-            & (clean_df["Income"] < 50)
-            & ~(clean_df["Description"].isin(["Grocery", "Restaurant & Shopping", "Gas", "Savings & Retirement","Utilities & Parking"])),
-        "Description",
+        (clean_df["Expenses"] < 50)
+        & (clean_df["Income"] < 50)
+        & ~(clean_df["Description"].isin(["Grocery", "Restaurant & Shopping", "Gas", "Savings & Retirement","Utilities & Parking"])),
+    "Description"
     ] = "Other"
     ####################################################################################
 
